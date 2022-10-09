@@ -1,6 +1,7 @@
 import io
 import json
 import logging
+import urllib3
 
 
 import sys
@@ -24,10 +25,13 @@ def handler(ctx, data: io.BytesIO = None):
                 ca_certs='./srch.crt',
                 # Add your cluster configuration here!
         )
-        for item in logs: 
-            return response.Response(ctx, response_data=json.dumps(logs), headers={"Content-Type": "application/json"})
+        for item in logs:
+            print ("the length of input is  " + str(len(logs)), file=sys.stderr)
+            y = json.dumps(logs)
+            print (y, file=sys.stderr)
+            #resp = client.index(index = 'oci_logs_index', id = 4, document = logs)
+            return response.Response(ctx, response_data=json.dumps({"this":"is good"}), headers={"Content-Type": "application/json"})
 
-        print ("test stderr output", file=sys.stderr)
 
     except (Exception, ValueError) as ex:
         logging.getLogger().info('error parsing json payload: ' + str(ex))
