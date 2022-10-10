@@ -26,9 +26,11 @@ def handler(ctx, data: io.BytesIO = None):
     try:
         logs=''
         logs = json.loads(data.getvalue())
-        #logs = logs[0]
-        #logs = json.dumps(logs)
-        #timestamp = int(round(datetime.now().timestamp()))
+        logs = logs[0]
+        #logs = str(logs)
+        #logs = logs[1:-1]
+        logs = json.dumps(logs)
+        timestamp = int(round(datetime.now().timestamp()))
         client = Elasticsearch(
                 ["https://03ac5b74f7fc483cba750cf5770d3966.us-central1.gcp.cloud.es.io:443"],
                 http_auth=('elastic', 'Kau6ktrDkf8pKMmUJxYNFNkN'),
@@ -38,16 +40,15 @@ def handler(ctx, data: io.BytesIO = None):
                 ca_certs='./srch.crt',
                 # Add your cluster configuration here!
         )
-        for item in logs: 
-            timestamp = int(round(datetime.now().timestamp()))
-            y = json.dumps(item)
-            print (y, file=sys.stderr)
-            client.index(index = 'oci_logs_2', id = timestamp, document = y ) 
-
+        #y = json.dumps(logs)
+        print (logs, file=sys.stderr)
+        client.index(index = 'oci_logs_2', id = timestamp, document = logs) 
+        #return response.Response(ctx, response_data=json.dumps({"this":"is good"}), headers={"Content-Type": "application/json"})
 
 
     except (Exception, ValueError) as ex:
         logging.getLogger().info('error parsing json payload: ' + str(ex))
 
     logging.getLogger().info("Inside Python Hello World function")
+    #return response.Response(ctx, response_data=json.dumps(logs), headers={"Content-Type": "application/json"})
     return response.Response(ctx, response_data=logs, headers={"Content-Type": "application/json"})

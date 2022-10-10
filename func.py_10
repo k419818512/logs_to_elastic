@@ -1,0 +1,51 @@
+import io
+import json
+import logging
+import urllib3
+
+
+import sys
+import random
+from datetime import datetime
+# need to install elasticsearch to docker image
+from elasticsearch import Elasticsearch
+
+
+from fdk import response
+
+def isJson(jsonData):
+    try:
+        json.loads(jsonData)
+    except ValueError as err:
+        return 1 
+    return 0
+
+
+
+def handler(ctx, data: io.BytesIO = None):
+    try:
+        oci_log = {"datetime":1665334327000,"logContent":{"data":{"action":"ACCEPT","bytesOut":208,"destinationAddress":"35.193.143.25","destinationPort":443,"endTime":1665334373,"flowid":"d6099370","packets":4,"protocol":6,"protocolName":"TCP","sourceAddress":"172.32.10.222","sourcePort":49354,"startTime":1665334327,"status":"OK","version":"2"},"id":"4a3838c9","oracle":{"compartmentid":"ocid1.compartment.oc1..aaaaaaaasxbgpohhj7u245szym5t3p5paymfysapc7qz5wirmbcctvr2unwa","ingestedtime":"2022-10-09T16:54:21.123Z","loggroupid":"ocid1.loggroup.oc1.iad.amaaaaaaafha7wiabyzu3vc4ilatm2tkswo2s7m5kn6aakhqoy5bski5jkeq","logid":"ocid1.log.oc1.iad.amaaaaaaafha7wianoj2iwhmn2tdluam74m62t36idlsizmusjy6i6mxx4ia","tenantid":"ocid1.tenancy.oc1..aaaaaaaaxtkkpxc5qwgpwx7y2wt5pinegyzea4uacnmck7iamsssjvw4s3bq","vniccompartmentocid":"ocid1.compartment.oc1..aaaaaaaasxbgpohhj7u245szym5t3p5paymfysapc7qz5wirmbcctvr2unwa","vnicocid":"ocid1.vnic.oc1.iad.abuwcljto4nryoiz3jkow33vfianp2mj44nlxyw77ji7v6ltgcec7fmtrkeq","vnicsubnetocid":"ocid1.subnet.oc1.iad.aaaaaaaafgb7lab7olxbf37mpzlltcs4uzq4azbhw6g42kxznsoyhfpsxqsa"},"source":"-","specversion":"1.0","time":"2022-10-09T16:52:07.000Z","type":"com.oraclecloud.vcn.flowlogs.DataEvent"}}
+        logs = json.loads(data.getvalue())
+        #logs = json.dumps(logs)
+        timestamp = int(round(datetime.now().timestamp()))
+        client = Elasticsearch(
+                ["https://03ac5b74f7fc483cba750cf5770d3966.us-central1.gcp.cloud.es.io:443"],
+                http_auth=('elastic', 'Kau6ktrDkf8pKMmUJxYNFNkN'),
+#               api_key=('3381795227', 'aXd2OWlZTUJGN1U3SFo4eFJ5aGk6RjVwTDdqOXZUTmV6T3JZR2pJR09jdw=='),
+                request_timeout=120,
+                verify_certs=True,
+                ca_certs='./srch.crt',
+                # Add your cluster configuration here!
+        )
+        #y = json.dumps(logs)
+        print (logs, file=sys.stderr)
+        client.index(index = 'oci_logs_2', id = timestamp, document = oci_log ) 
+        #return response.Response(ctx, response_data=json.dumps({"this":"is good"}), headers={"Content-Type": "application/json"})
+
+
+    except (Exception, ValueError) as ex:
+        logging.getLogger().info('error parsing json payload: ' + str(ex))
+
+    logging.getLogger().info("Inside Python Hello World function")
+    #return response.Response(ctx, response_data=json.dumps(logs), headers={"Content-Type": "application/json"})
+    return response.Response(ctx, response_data=logs, headers={"Content-Type": "application/json"})
